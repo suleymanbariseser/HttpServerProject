@@ -2,9 +2,10 @@ import socket
 import threading
 import time
 
-HEADER = 1024
+HEADER = 4096
 PORT = 8888
 PROXY = "127.0.0.1"
+SERVER = socket.gethostbyname(socket.gethostname())
 # SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = (PROXY, PORT)
 FORMAT = 'utf-8'
@@ -26,7 +27,6 @@ def get_server_response(new_socket):
 
 
 def connect_server(conn, request, webserver, port):
-    print(webserver)
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((webserver, port))
@@ -39,9 +39,10 @@ def connect_server(conn, request, webserver, port):
                 conn.send(data)
             else:
                 break
-            s.close()
-            conn.close()
+        s.close()
+        conn.close()
     except:
+        print('[ERROR] LINE-47')
         if s:
             s.close()
         if conn:
@@ -81,12 +82,16 @@ def handle_client(conn, addr):
         webserver = temp[:port_pos]
     # server_name, server_port = url.split(':')
     # server_port = int(server_port)
-    # print(server_name, server_port)
-    connect_server(conn, request, webserver, port)
+    if webserver == SERVER:
+        connect_server(conn, request, webserver, port)
+        print('[LINE-90] FINISHED')
+    else:
+        print('[LINE-92] TEST')
+        pass
 
 
 def start():
-    server.listen(10)
+    server.listen()
     print(f"[PROXY-LISTENING] PROXY is listening on {PROXY}:{PORT}")
     while True:
         conn, addr = server.accept()

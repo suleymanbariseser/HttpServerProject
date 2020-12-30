@@ -48,6 +48,17 @@ def send_response(connection, status, file, proto):
     connection.sendall(file.encode(FORMAT))
 
 
+def get_file_size(url):
+    if '://' in url:
+        url = url.split('://')[1]
+    file_size = url.split('/')[1]
+    if file_size.isnumeric():
+        file_size = int(file_size)
+    else:
+        file_size = 0
+    return file_size
+
+
 def handle_client(conn, addr):
     print("[SERVER-NEW CONNECTION]\n-------------------------------------\n" +
           f"{addr} is connected.\n")
@@ -57,22 +68,21 @@ def handle_client(conn, addr):
     request = conn.recv(HEADER).decode(FORMAT)
     headers = request.split("\n")
     req_info = headers[0].split()
-    response_proto = req_info[2]
-    req_method = req_info[0]
+    method = req_info[0]
+    url = req_info[1]
+    proto = req_info[2]
     print(
         f"\n[SERVER-REQUEST INFORMATION]\n-------------------------------------\n{request}\n")
-    if req_method == "GET":
+    if method == "GET":
         try:
-            req_file_size = req_info[1].split('/')[1]
-            req_file_size = int(req_file_size)
-            if req_file_size < 100 or req_file_size > 20000:
-                response_status = "400 Bad Request"
-                filename = "/400.html"
-            else:
+            file_size = get_file_size(url)
+            if 100 < file_size < 20000:
                 response_status = "200 OK"
                 filename = "/index.html"
-                create_file(req_file_size)
-
+                create_file(file_size)
+            else:
+                response_status = "400 Bad Request"
+                filename = "/400.html"
         except:
             response_status = "400 Bad Request"
             filename = "/400.html"
@@ -80,13 +90,15 @@ def handle_client(conn, addr):
         response_status = "501 Not Implemented"
         filename = "/501.html"
     file = read_file(filename)
-    send_response(conn, response_status, file, response_proto)
+    print("File Name=", filename)
+    print("File Size=", str(len(file)))
+    send_response(conn, response_status, file, proto)
     conn.close()
     return response_status
 
 
 def start():
-    server.listen(10)
+    server.listen()
     print(f"[SERVER-LISTENING] Server is listening on {SERVER}:{PORT}")
     while True:
         conn, addr = server.accept()
