@@ -29,7 +29,17 @@ def get_server_response(new_socket):
 def connect_server(conn, request, webserver, port):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((webserver, port))
+        try:
+            s.connect((webserver, port))
+        except:
+            file = read_file('/404.html')
+            response = str(
+                f"HTTP/1.1 404 Not Found HTTP/1.1 \r\nContent-Length: {str(len(file))}\r\nContent-Type: text/html; charset={FORMAT}\r\n\r\n")
+            conn.sendall(response.encode(FORMAT))
+            conn.sendall(file.encode(FORMAT))
+            s.close()
+            conn.close()
+            return
         s.send(request)         # send request to webserver
         while 1:
             # receive data from web server
@@ -47,6 +57,24 @@ def connect_server(conn, request, webserver, port):
             s.close()
         if conn:
             conn.close()
+
+
+def read_file(filename):
+    file = open("."+filename)
+    content = file.read()
+    file.close()
+    return content
+
+
+def get_file_size(url):
+    if '://' in url:
+        url = url.split('://')[1]
+    file_size = url.split('/')[1]
+    if file_size.isnumeric():
+        file_size = int(file_size)
+    else:
+        file_size = 0
+    return file_size
 
 
 def handle_client(conn, addr):
@@ -80,13 +108,21 @@ def handle_client(conn, addr):
     else:  # specific port
         port = int((temp[(port_pos+1):])[:webserver_pos-port_pos-1])
         webserver = temp[:port_pos]
-    # server_name, server_port = url.split(':')
-    # server_port = int(server_port)
     if webserver == SERVER:
-        connect_server(conn, request, webserver, port)
-        print('[LINE-90] FINISHED')
+        file_size = get_file_size(request.decode(
+            FORMAT).split("\n")[0].split()[1])
+        if(file_size <= 9999):
+            print('[LINE-109]', webserver)
+            connect_server(conn, request, webserver, port)
+        else:
+            file = read_file('/414.html')
+            response = str(
+                f"HTTP/1.1 414 Request-URI Too Long HTTP/1.1 \r\nContent-Length: {str(len(file))}\r\nContent-Type: text/html; charset={FORMAT}\r\n\r\n")
+            conn.sendall(response.encode(FORMAT))
+            conn.sendall(file.encode(FORMAT))
+            conn.close()
+            pass
     else:
-        print('[LINE-92] TEST')
         pass
 
 

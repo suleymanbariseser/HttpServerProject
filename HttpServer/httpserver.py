@@ -76,7 +76,7 @@ def handle_client(conn, addr):
     if method == "GET":
         try:
             file_size = get_file_size(url)
-            if 100 < file_size < 20000:
+            if 100 <= file_size <= 20000:
                 response_status = "200 OK"
                 filename = "/index.html"
                 create_file(file_size)
