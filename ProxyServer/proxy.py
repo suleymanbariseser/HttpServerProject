@@ -108,9 +108,14 @@ def handle_client(conn, addr):
     else:  # specific port
         port = int((temp[(port_pos+1):])[:webserver_pos-port_pos-1])
         webserver = temp[:port_pos]
+        requested_file = temp[webserver_pos:]
     if webserver == SERVER:
+        print(f"[PROXY-ACTIVE CONNECTIONS] {threading.activeCount() - 1}")
+        print(f"Request Line {first_line}")
         file_size = get_file_size(request.decode(
             FORMAT).split("\n")[0].split()[1])
+        request = request.decode(FORMAT).replace(
+            url, requested_file).encode(FORMAT)
         if(file_size <= 9999):
             print('[LINE-109]', webserver)
             connect_server(conn, request, webserver, port)
@@ -123,6 +128,7 @@ def handle_client(conn, addr):
             conn.close()
             pass
     else:
+        conn.close()
         pass
 
 
@@ -134,7 +140,6 @@ def start():
         thread = threading.Thread(target=handle_client, args=(conn, addr))
         thread.setDaemon(True)
         thread.start()
-        print(f"[PROXY-ACTIVE CONNECTIONS] {threading.activeCount() - 1}")
 
 
 print("[PROXY-STARTING] PROXY is starting...")

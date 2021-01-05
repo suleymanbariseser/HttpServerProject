@@ -3,6 +3,7 @@ import socket
 import threading
 import string
 import random
+import os
 # import signal
 
 HEADER = 1024
@@ -28,12 +29,17 @@ def create_file(size):
         random_letter = random.choice(lower_upper_alphabet)
         content += random_letter
     content = f"<!DOCTYPE html><html><head><title>{str(size)} bytes</title></head><body>{content}</body></html>"
-    file = open("./index.html", 'w+')
+    file = open(get_process_dir('index.html'), 'w+')
     file.write(content)
 
 
+def get_process_dir(filename):
+    currentfile = __file__
+    return currentfile.replace('httpserver.py', filename)
+
+
 def read_file(filename):
-    file = open("."+filename)
+    file = open(get_process_dir(filename))
     content = file.read()
     file.close()
     return content
@@ -41,7 +47,7 @@ def read_file(filename):
 
 def send_response(connection, status, file, proto):
     response = str(
-        f"{proto} {status} {proto} \r\nContent-Length: {str(len(file))}\r\nContent-Type: text/html; charset={FORMAT}\r\n\r\n")
+        f"{proto} {status} {proto} \r\nContent-Length: {str(len(file))}\r\nContent-Type: {'text/html' if file else 'x-icon'}; charset={FORMAT}\r\n\r\n")
     print(
         f"[SERVER-RESPONSE MESSAGE]\n-------------------------------------\n{response}")
     connection.sendall(response.encode(FORMAT))
@@ -63,11 +69,11 @@ def handle_client(conn, addr):
     print("[SERVER-NEW CONNECTION]\n-------------------------------------\n" +
           f"{addr} is connected.\n")
     response_status = ""
-    # connected = True
     filename = ""
     request = conn.recv(HEADER).decode(FORMAT)
     headers = request.split("\n")
     req_info = headers[0].split()
+    print(req_info)
     method = req_info[0]
     url = req_info[1]
     proto = req_info[2]
@@ -76,19 +82,23 @@ def handle_client(conn, addr):
     if method == "GET":
         try:
             file_size = get_file_size(url)
-            if 100 <= file_size <= 20000:
+            print("url=", url)
+            if url == '/favicon.ico':
                 response_status = "200 OK"
-                filename = "/index.html"
+                filename = url
+            elif 100 <= file_size <= 20000:
+                response_status = "200 OK"
+                filename = "index.html"
                 create_file(file_size)
             else:
                 response_status = "400 Bad Request"
-                filename = "/400.html"
+                filename = "400.html"
         except:
             response_status = "400 Bad Request"
-            filename = "/400.html"
+            filename = "400.html"
     else:
         response_status = "501 Not Implemented"
-        filename = "/501.html"
+        filename = "501.html"
     file = read_file(filename)
     print("File Name=", filename)
     print("File Size=", str(len(file)))
