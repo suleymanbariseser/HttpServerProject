@@ -1,0 +1,3 @@
+- Check all error messages.
+- Part 3 and 4
+- Optimize code

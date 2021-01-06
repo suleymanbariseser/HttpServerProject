@@ -1,3 +1,4 @@
-/.vscode
-/.metals
-index.html
+.vscode
+.metals
+ProxyServer/cache/*
+HttpServer/index.html

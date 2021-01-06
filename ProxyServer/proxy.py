@@ -13,6 +13,26 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(ADDR)
 
 
+def read_cached_file(filename):
+    try:
+        cached_file = open(f"cache{filename}", 'r')
+        content = cached_file.read()
+        cached_file.close()
+        return content
+    except IOError:
+        return None
+
+
+def send_response(connection, status, file, proto):
+    print("[CONNECTION] PROXY -> CLIENT")
+    response = str(
+        f"{proto} {status} {proto} \r\nContent-Length: {str(len(file))}\r\nContent-Type: {'text/html' if file else 'x-icon'}; charset={FORMAT}\r\n\r\n")
+    print(
+        f"[SERVER-RESPONSE MESSAGE]\n-------------------------------------\n{response}")
+    connection.sendall(response.encode(FORMAT))
+    connection.sendall(file.encode(FORMAT))
+
+
 def get_server_response(new_socket):
     connected = True
     while connected:
@@ -26,15 +46,27 @@ def get_server_response(new_socket):
     pass
 
 
-def connect_server(conn, request, webserver, port):
+def save_to_cache(filename, content):
+    print("[PROXY-CACHE] File is cached.")
+    print(filename, content)
+    file = open(f"cache{filename}", 'w')
+    file.write(content)
+    file.close()
+
+
+def connect_server(conn, request, webserver, port, filename):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             s.connect((webserver, port))
+            print(f'[CONNECTION] PROXY -> SERVER')
+            new_message = request.decode(FORMAT).split('\n')[0]
+            print(f"[MESSAGE] {new_message}")
         except:
             file = read_file('/404.html')
             response = str(
                 f"HTTP/1.1 404 Not Found HTTP/1.1 \r\nContent-Length: {str(len(file))}\r\nContent-Type: text/html; charset={FORMAT}\r\n\r\n")
+            print(f'[RESPONSE]\n404 NOT FOUND')
             conn.sendall(response.encode(FORMAT))
             conn.sendall(file.encode(FORMAT))
             s.close()
@@ -44,15 +76,28 @@ def connect_server(conn, request, webserver, port):
         while 1:
             # receive data from web server
             data = s.recv(HEADER)
+            print(f'[CONNECTION] SERVER -> PROXY')
+            print(f"[MESSAGE] {data}")
+
             if (len(data) > 0):
                 # send to browser
                 conn.send(data)
+                content = data.decode(FORMAT)
+                if "Content-Length" not in content:
+                    save_to_cache(filename, content)
+                else:
+                    print(f"[MESSAGE-NEW] {data}")
+
+                print(f'[CONNECTION] PROXY -> CLIENT')
             else:
+                print(f'[CONNECTION] PROXY -> CLIENT')
+                print(f"[MESSAGE] NULL")
                 break
         s.close()
         conn.close()
+        print("[CONNECTION] END")
     except:
-        print('[ERROR] LINE-47')
+        print('[ERROR]\nAn error is occured!!!')
         if s:
             s.close()
         if conn:
@@ -110,19 +155,27 @@ def handle_client(conn, addr):
         webserver = temp[:port_pos]
         requested_file = temp[webserver_pos:]
     if webserver == SERVER:
-        print(f"[PROXY-ACTIVE CONNECTIONS] {threading.activeCount() - 1}")
-        print(f"Request Line {first_line}")
+        print(f"\n\n[CONNECTION] START")
+        print(f'[CONNECTION] CLIENT -> PROXY')
+        print(f"[MESSAGE] {first_line}")
         file_size = get_file_size(request.decode(
             FORMAT).split("\n")[0].split()[1])
         request = request.decode(FORMAT).replace(
             url, requested_file).encode(FORMAT)
         if(file_size <= 9999):
-            print('[LINE-109]', webserver)
-            connect_server(conn, request, webserver, port)
+            cache_content = read_cached_file(requested_file)
+            if cache_content == None:
+                connect_server(conn, request, webserver, port, requested_file)
+            else:
+                send_response(conn, "200 OK", cache_content, "HTTP/1.1")
+                conn.close()
+                print("[PROXY-CACHE] File is served from PROXY.")
+
         else:
             file = read_file('/414.html')
             response = str(
                 f"HTTP/1.1 414 Request-URI Too Long HTTP/1.1 \r\nContent-Length: {str(len(file))}\r\nContent-Type: text/html; charset={FORMAT}\r\n\r\n")
+            print(f'[CONNECTION]\n{response}')
             conn.sendall(response.encode(FORMAT))
             conn.sendall(file.encode(FORMAT))
             conn.close()

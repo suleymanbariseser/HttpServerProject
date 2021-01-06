@@ -15,9 +15,6 @@ except:
 SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT)
 FORMAT = 'utf-8'
-# signal.signal(signal.SIGINT, shutdown)
-# DISCONNECT_MESSAGE = "!DISCONNECT"
-
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(ADDR)
 
@@ -34,8 +31,8 @@ def create_file(size):
 
 
 def get_process_dir(filename):
-    currentfile = __file__
-    return currentfile.replace('httpserver.py', filename)
+    currentfile = os.getcwd()
+    return currentfile + "\\" + filename
 
 
 def read_file(filename):
@@ -85,7 +82,7 @@ def handle_client(conn, addr):
             print("url=", url)
             if url == '/favicon.ico':
                 response_status = "200 OK"
-                filename = url
+                filename = 'favicon.ico'
             elif 100 <= file_size <= 20000:
                 response_status = "200 OK"
                 filename = "index.html"
