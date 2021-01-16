@@ -1,0 +1,66 @@
+Concurrency Level:      1
+Time taken for tests:   0.734 seconds
+Complete requests:      100
+Failed requests:        0
+Total transferred:      917000 bytes
+HTML transferred:       907900 bytes
+Requests per second:    136.29 [#/sec] (mean)
+Time per request:       7.337 [ms] (mean)
+Time per request:       7.337 [ms] (mean, across all concurrent requests)
+Transfer rate:          1220.49 [Kbytes/sec] received
+
+
+
+
+Concurrency Level:      5
+Time taken for tests:   0.324 seconds
+Complete requests:      100
+Failed requests:        0
+Total transferred:      917000 bytes
+HTML transferred:       907900 bytes
+Requests per second:    308.35 [#/sec] (mean)
+Time per request:       16.216 [ms] (mean)
+Time per request:       3.243 [ms] (mean, across all concurrent requests)
+Transfer rate:          2761.25 [Kbytes/sec] received
+
+
+
+
+Concurrency Level:      10
+Time taken for tests:   0.318 seconds
+Complete requests:      100
+Failed requests:        0
+Total transferred:      917000 bytes
+HTML transferred:       907900 bytes
+Requests per second:    314.84 [#/sec] (mean)
+Time per request:       31.762 [ms] (mean)
+Time per request:       3.176 [ms] (mean, across all concurrent requests)
+Transfer rate:          2819.40 [Kbytes/sec] received
+
+
+
+Concurrency Level:      50
+Time taken for tests:   3.653 seconds
+Complete requests:      100
+Failed requests:        0
+Total transferred:      917000 bytes
+HTML transferred:       907900 bytes
+Requests per second:    27.38 [#/sec] (mean)
+Time per request:       1826.342 [ms] (mean)
+Time per request:       36.527 [ms] (mean, across all concurrent requests)
+Transfer rate:          245.16 [Kbytes/sec] received
+
+
+
+
+Concurrency Level:      100
+Time taken for tests:   3.663 seconds
+Complete requests:      100
+Failed requests:        0
+Total transferred:      917000 bytes
+HTML transferred:       907900 bytes
+Requests per second:    27.30 [#/sec] (mean)
+Time per request:       3662.762 [ms] (mean)
+Time per request:       36.628 [ms] (mean, across all concurrent requests)
+Transfer rate:          244.49 [Kbytes/sec] received
+
